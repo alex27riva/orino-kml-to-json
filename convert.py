@@ -30,8 +30,9 @@ def process_element(element):
       hasValidTag = False
 
     if hasValidTag:
-      lat = float(element.Point.coordinates.text.split(',')[0])
-      lon = float(element.Point.coordinates.text.split(',')[1])
+      # 0: longitude, 1: latitude
+      lon = float(element.Point.coordinates.text.split(',')[0])
+      lat = float(element.Point.coordinates.text.split(',')[1])
       location = {
         'name': element.name.text,
         'description': remove_tags(element.description.text) if hasattr(element, 'description') else None,
