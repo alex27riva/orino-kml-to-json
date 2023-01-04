@@ -12,12 +12,14 @@ root = parser.fromstring(kml_bytes)
 # Create an empty list
 location_list = []
 
+
 def remove_tags(text):
-    """Remove HTML tags from a string"""
-    clean = re.compile('<.*?>')
-    text = re.sub(clean, '', text)
-    text = text.replace("\n", "")
-    return text
+  """Remove HTML tags from a string"""
+  clean = re.compile('<.*?>')
+  text = re.sub(clean, '', text)
+  text = text.replace("\n", "")
+  return text
+
 
 def process_element(element):
   """Recursively process an element and its children."""
@@ -35,15 +37,20 @@ def process_element(element):
       lat = float(element.Point.coordinates.text.split(',')[1])
       name = element.name.text
       location = {
-        'name': name.lower().capitalize(),
-        'description': remove_tags(element.description.text).capitalize() if hasattr(element, 'description') else None,
-        'latitude': lat,
-        'longitude': lon,
+          'name':
+              name.lower().capitalize(),
+          'description':
+              remove_tags(element.description.text).capitalize() if hasattr(
+                  element, 'description') else None,
+          'latitude':
+              lat,
+          'longitude':
+              lon,
       }
       print(location)
       location_list.append(location)
   elif element.tag.endswith('}Folder'):
-     # Skip folders with specific names
+    # Skip folders with specific names
     if element.name.text not in ['Tracks', 'Waypoints', 'Points']:
       # Process the element's children
       for child in element.iterchildren():
@@ -53,13 +60,12 @@ def process_element(element):
     for child in element.iterchildren():
       process_element(child)
 
+
 # Process the root element
 process_element(root)
 
 # Create the JSON object
-json_data = {
-  'location': location_list
-}
+json_data = {'location': location_list}
 
 # Write the JSON object to a file
 with open('output.json', 'w', encoding="utf-8") as f:
