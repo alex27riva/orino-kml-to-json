@@ -1,13 +1,26 @@
 import json
 import re
-from pykml import parser
+import argparse
+from pykml import parser as kparser
+
+# Parse arguments from command line
+parser = argparse.ArgumentParser()
+parser.add_argument('--desc',
+                    action='store_true',
+                    default=False,
+                    help='Skip elements with empty descriptions')
+parser.add_argument('--input_file',
+                    type=str,
+                    default='input.kml',
+                    help='The KML file to convert')
+args = parser.parse_args()
 
 # Read the KML file into a bytes object
-with open('input.kml', 'rb') as f:
+with open(args.input_file, 'rb') as f:
   kml_bytes = f.read()
 
 # Parse the KML bytes
-root = parser.fromstring(kml_bytes)
+root = kparser.fromstring(kml_bytes)
 
 # Create an empty list
 location_list = []
@@ -36,19 +49,21 @@ def process_element(element):
       lon = float(element.Point.coordinates.text.split(',')[0])
       lat = float(element.Point.coordinates.text.split(',')[1])
       name = element.name.text
+      description = remove_tags(
+          element.description.text).capitalize() if hasattr(
+              element, 'description') else ""
       location = {
-          'name':
-              name.lower().capitalize(),
-          'description':
-              remove_tags(element.description.text).capitalize() if hasattr(
-                  element, 'description') else None,
-          'latitude':
-              lat,
-          'longitude':
-              lon,
+          'name': name.lower().capitalize(),
+          'description': description,
+          'latitude': lat,
+          'longitude': lon,
       }
       print(location)
-      location_list.append(location)
+      if args.desc:
+        if description:
+          location_list.append(location)
+      else:
+        location_list.append(location)
   elif element.tag.endswith('}Folder'):
     # Skip folders with specific names
     if element.name.text not in ['Tracks', 'Waypoints', 'Points']:
