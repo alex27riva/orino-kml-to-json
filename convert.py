@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
+import sys
 import json
 import re
 import argparse
+import logging as log
 from pykml import parser as kparser
+
+# Logging
+log.basicConfig(level=log.ERROR)
 
 # Parse arguments from command line
 parser = argparse.ArgumentParser()
@@ -22,8 +27,12 @@ parser.add_argument('--desc',
 args = parser.parse_args()
 
 # Read the KML file into a bytes object
-with open(args.input, 'rb') as f:
-  kml_bytes = f.read()
+try:
+  with open(args.input, 'rb') as f:
+    kml_bytes = f.read()
+except FileNotFoundError:
+  log.error(f"The file '{args.input}' was not found.")
+  sys.exit(1)
 
 # Parse the KML bytes
 root = kparser.fromstring(kml_bytes)
@@ -44,14 +53,14 @@ def remove_tags(text):
 def process_element(element):
   """Recursively process an element and its children."""
   if element.tag.endswith('}Placemark'):
-    hasValidTag = False
+    hasCoordinates = False
 
     try:
-      hasValidTag = hasattr(element.Point, "coordinates")
+      hasCoordinates = hasattr(element.Point, "coordinates")
     except:
-      hasValidTag = False
+      hasCoordinates = False
 
-    if hasValidTag:
+    if hasCoordinates:
       # 0: longitude, 1: latitude
       lon = float(element.Point.coordinates.text.split(',')[0])
       lat = float(element.Point.coordinates.text.split(',')[1])
@@ -65,7 +74,7 @@ def process_element(element):
           'latitude': lat,
           'longitude': lon,
       }
-      print(location)
+      log.debug(location)
       if args.desc:
         if description:
           location_list.append(location)
@@ -90,5 +99,10 @@ process_element(root)
 json_data = {'location': location_list}
 
 # Write the JSON object to a file
-with open(args.output, 'w', encoding="utf-8") as f:
-  json.dump(json_data, f, ensure_ascii=False)
+try:
+  with open(args.output, 'w', encoding="utf-8") as f:
+    json.dump(json_data, f, ensure_ascii=False)
+except PermissionError:
+  log.error(f"Failed writing {args.output} file, permission denied")
+except Exception:
+  log.error("Failed writing file")
