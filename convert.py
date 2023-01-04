@@ -1,4 +1,5 @@
 import json
+import re
 from pykml import parser
 
 # Read the KML file into a bytes object
@@ -10,6 +11,13 @@ root = parser.fromstring(kml_bytes)
 
 # Create an empty list
 location_list = []
+
+def remove_tags(text):
+    """Remove HTML tags from a string"""
+    clean = re.compile('<.*?>')
+    text = re.sub(clean, '', text)
+    text = text.replace("\n", "")
+    return text
 
 def process_element(element):
   """Recursively process an element and its children."""
@@ -24,10 +32,9 @@ def process_element(element):
     if hasValidTag:
       lat = float(element.Point.coordinates.text.split(',')[0])
       lon = float(element.Point.coordinates.text.split(',')[1])
-      print(lat, lon, type(lat), type(lon))
       location = {
         'name': element.name.text,
-        'description': element.description.text if hasattr(element, 'description') else None,
+        'description': remove_tags(element.description.text) if hasattr(element, 'description') else None,
         'latitude': lat,
         'longitude': lon,
       }
@@ -53,5 +60,5 @@ json_data = {
 }
 
 # Write the JSON object to a file
-with open('output.json', 'w') as f:
-  json.dump(json_data, f)
+with open('output.json', 'w', encoding="utf-8") as f:
+  json.dump(json_data, f, ensure_ascii=False)
