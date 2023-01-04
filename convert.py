@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import sys
+import os
 import json
 import re
 import argparse
+import zipfile
+import tempfile
 import logging as log
 from pykml import parser as kparser
 
@@ -26,12 +29,26 @@ parser.add_argument('--desc',
 
 args = parser.parse_args()
 
+input_file = args.input
+
+# Detect input file type
+if input_file.endswith('.kml'):
+  pass
+elif input_file.endswith('.kmz'):
+  with zipfile.ZipFile(input_file, 'r') as zip_ref:
+    temp_dir = tempfile.gettempdir()
+    zip_ref.extractall(temp_dir)
+  input_file = os.path.join(temp_dir, 'doc.kml')
+else:
+  log.error("Invalid input file")
+  sys.exit(1)
+
 # Read the KML file into a bytes object
 try:
-  with open(args.input, 'rb') as f:
+  with open(input_file, 'rb') as f:
     kml_bytes = f.read()
 except FileNotFoundError:
-  log.error(f"The file '{args.input}' was not found.")
+  log.error(f"The file '{input_file}' was not found.")
   sys.exit(1)
 
 # Parse the KML bytes
