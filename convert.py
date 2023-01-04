@@ -6,18 +6,23 @@ from pykml import parser as kparser
 
 # Parse arguments from command line
 parser = argparse.ArgumentParser()
+parser.add_argument('--input',
+                    type=str,
+                    default='input.kml',
+                    help='The KML file to convert')
+parser.add_argument('--output',
+                    type=str,
+                    default='output.json',
+                    help='The converted json file')
 parser.add_argument('--desc',
                     action='store_true',
                     default=False,
                     help='Skip elements with empty descriptions')
-parser.add_argument('--input_file',
-                    type=str,
-                    default='input.kml',
-                    help='The KML file to convert')
+
 args = parser.parse_args()
 
 # Read the KML file into a bytes object
-with open(args.input_file, 'rb') as f:
+with open(args.input, 'rb') as f:
   kml_bytes = f.read()
 
 # Parse the KML bytes
@@ -32,6 +37,7 @@ def remove_tags(text):
   clean = re.compile('<.*?>')
   text = re.sub(clean, '', text)
   text = text.replace("\n", "")
+  text = text.strip()
   return text
 
 
@@ -84,5 +90,5 @@ process_element(root)
 json_data = {'location': location_list}
 
 # Write the JSON object to a file
-with open('output.json', 'w', encoding="utf-8") as f:
+with open(args.output, 'w', encoding="utf-8") as f:
   json.dump(json_data, f, ensure_ascii=False)
