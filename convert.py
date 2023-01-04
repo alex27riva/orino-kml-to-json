@@ -33,9 +33,10 @@ def process_element(element):
       # 0: longitude, 1: latitude
       lon = float(element.Point.coordinates.text.split(',')[0])
       lat = float(element.Point.coordinates.text.split(',')[1])
+      name = element.name.text
       location = {
-        'name': element.name.text,
-        'description': remove_tags(element.description.text) if hasattr(element, 'description') else None,
+        'name': name.lower().capitalize(),
+        'description': remove_tags(element.description.text).capitalize() if hasattr(element, 'description') else None,
         'latitude': lat,
         'longitude': lon,
       }
