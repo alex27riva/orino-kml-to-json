@@ -62,7 +62,8 @@ def remove_tags(text):
   """Remove HTML tags from a string"""
   clean = re.compile('<.*?>')
   text = re.sub(clean, '', text)
-  text = text.replace("\n", "")
+  text = re.sub(r"https?://[^\s]+", "", text)
+  text = text.replace("\n", " ")
   text = text.strip()
   return text
 
